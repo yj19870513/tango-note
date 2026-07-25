@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="単語ノート">
+<meta name="theme-color" content="#f7f8fa">
+<title>単語ノート</title>
+<style>
+  :root{--bg:#f7f8fa;--card:#ffffff;--line:#e2e6ee;--text:#1f2430;--muted:#7a8296;
+        --accent:#2563eb;--green:#16a34a;--orange:#c2620a;--red:#dc2626;--field:#fbfcfe;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:var(--bg);color:var(--text);font-size:16px;line-height:1.7;
+       font-family:-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;
+       padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);}
+  .wrap{max-width:680px;margin:0 auto;padding:16px 14px 120px;}
+  h1{font-size:20px;margin-bottom:2px;}
+  .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+
+  /* 入力エリア */
+  .addbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;
+          box-shadow:0 1px 3px rgba(20,30,60,.06);}
+  .addbox input[type=text],.addbox textarea{
+    width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}
+  .addbox textarea{margin-top:8px;resize:vertical;min-height:80px;line-height:1.6;}
+  .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .btn{flex:1;min-width:120px;background:var(--accent);color:#fff;border:none;border-radius:10px;
+       padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn.sub{background:#eef2fb;color:var(--accent);border:1px solid #cfdcf7;}
+  .btn:disabled{opacity:.5;}
+  .status{font-size:13px;color:var(--muted);margin-top:8px;min-height:20px;}
+  .status.err{color:var(--orange);}
+  .links{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .links a{flex:1;min-width:100px;text-align:center;background:var(--field);border:1px solid var(--line);
+           border-radius:8px;padding:9px;color:var(--accent);text-decoration:none;font-size:13.5px;}
+
+  /* 検索・件数 */
+  .tools{display:flex;gap:8px;margin-bottom:10px;}
+  .tools input{flex:1;background:var(--card);color:var(--text);border:1px solid var(--line);
+               border-radius:10px;padding:10px 12px;font-size:15px;}
+  .tools select{background:var(--card);color:var(--text);border:1px solid var(--line);
+                border-radius:10px;padding:10px;font-size:14px;}
+  .count{color:var(--muted);font-size:12.5px;margin-bottom:10px;}
+
+  /* カード */
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05);}
+  .item .w{font-size:18px;font-weight:700;}
+  .item .m{margin-top:6px;white-space:pre-wrap;font-size:15px;}
+  .item .m.empty{color:var(--orange);}
+  .item .meta{color:var(--muted);font-size:11.5px;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;}
+  .item .acts{display:flex;gap:8px;margin-top:10px;}
+  .item .acts button{flex:1;background:var(--field);border:1px solid var(--line);color:var(--muted);
+                     border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;}
+  .item .acts button.del{color:var(--red);}
+  .item.quiz .m{filter:blur(6px);cursor:pointer;transition:filter .15s;}
+  .item.quiz .m.show{filter:none;}
+  .empty-msg{color:var(--muted);text-align:center;padding:40px 0;font-size:14px;}
+
+  /* 下部バー */
+  .footer{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);
+          border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+          display:flex;gap:8px;max-width:680px;margin:0 auto;}
+  .footer button{flex:1;background:var(--field);border:1px solid var(--line);color:var(--muted);
+                 border-radius:10px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+  .footer button.on{background:#e7edfb;color:var(--accent);border-color:#b9cdf5;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📒 単語ノート</h1>
+  <div class="sub">調べた単語をためて、あとで見返す。意味はWikipediaから自動取得します。</div>
+
+  <div class="addbox">
+    <input type="text" id="word" placeholder="単語を入力（例：アジャイル）" autocomplete="off"
+           onkeydown="if(event.key==='Enter')addWord()">
+    <textarea id="meaning" placeholder="意味（空のままでOK。自動取得できなければ、あとから自分の言葉で書けます）"></textarea>
+    <div class="row">
+      <button class="btn" onclick="addWord()">保存する</button>
+      <button class="btn sub" onclick="lookup()">意味を調べる</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="links" id="links"></div>
+  </div>
+
+  <div class="tools">
+    <input type="search" id="q" placeholder="単語・意味を検索" oninput="render()">
+    <select id="sort" onchange="render()">
+      <option value="new">新しい順</option>
+      <option value="old">古い順</option>
+      <option value="word">五十音順</option>
+      <option value="noMeaning">意味が空のみ</option>
+    </select>
+  </div>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+</div>
+
+<div class="footer">
+  <button id="btnList" class="on" onclick="setMode('list')">一覧</button>
+  <button id="btnQuiz" onclick="setMode('quiz')">かくして復習</button>
+  <button onclick="exportJson()">バックアップ</button>
+  <button onclick="document.getElementById('imp').click()">読み込み</button>
+  <input type="file" id="imp" accept="application/json" style="display:none" onchange="importJson(this)">
+</div>
+
+<script>
+"use strict";
+const KEY="tango_note_v1";
+let MODE="list";
+const $=id=>document.getElementById(id);
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"[]"); }catch(e){ return []; } }
+function save(a){ localStorage.setItem(KEY, JSON.stringify(a)); }
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function today(){ const d=new Date(); return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate(); }
+
+/* ---------- Wikipediaから意味を取得（APIキー不要） ---------- */
+async function fetchMeaning(word){
+  const url="https://ja.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(word);
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),7000);
+  try{
+    const r=await fetch(url,{signal:ctl.signal});
+    clearTimeout(to);
+    if(!r.ok) return null;
+    const j=await r.json();
+    if(j.type&&j.type.includes("disambiguation")) return null; // 曖昧さ回避ページは除外
+    return j.extract||null;
+  }catch(e){ clearTimeout(to); return null; }
+}
+function searchLinks(word){
+  const w=encodeURIComponent(word);
+  return `<a href="https://www.google.com/search?q=${w}+とは" target="_blank" rel="noopener">Googleで調べる</a>
+          <a href="https://ja.wikipedia.org/w/index.php?search=${w}" target="_blank" rel="noopener">Wikipediaで探す</a>`;
+}
+
+async function lookup(){
+  const w=$("word").value.trim();
+  if(!w){ $("status").textContent="先に単語を入力してください"; return; }
+  $("status").className="status"; $("status").textContent="調べています…";
+  $("links").innerHTML="";
+  const m=await fetchMeaning(w);
+  if(m){
+    $("meaning").value=m;
+    $("status").textContent="Wikipediaから取得しました。自分の言葉に書き換えると記憶に残りやすいです。";
+  }else{
+    $("status").className="status err";
+    $("status").textContent="自動では見つかりませんでした。下のリンクで調べて、意味を書いてください。";
+    $("links").innerHTML=searchLinks(w);
+  }
+}
+
+async function addWord(){
+  const w=$("word").value.trim();
+  if(!w){ $("status").textContent="単語を入力してください"; return; }
+  let m=$("meaning").value.trim();
+  const arr=load();
+  if(arr.some(x=>x.word===w)){
+    if(!confirm(`「${w}」はすでに登録されています。上書きしますか？`)) return;
+    arr.splice(arr.findIndex(x=>x.word===w),1);
+  }
+  if(!m){ // 意味が空なら自動取得を試みる
+    $("status").className="status"; $("status").textContent="意味を自動取得しています…";
+    m=await fetchMeaning(w)||"";
+  }
+  arr.push({word:w, meaning:m, date:today(), ts:Date.now()});
+  save(arr);
+  $("word").value=""; $("meaning").value="";
+  $("status").className="status";
+  $("status").textContent = m ? `「${w}」を保存しました（意味も取得済み）` : `「${w}」を保存しました。意味はあとで書き足せます`;
+  $("links").innerHTML = m ? "" : searchLinks(w);
+  render();
+}
+
+function setMode(m){
+  MODE=m;
+  $("btnList").className = m==="list"?"on":"";
+  $("btnQuiz").className = m==="quiz"?"on":"";
+  render();
+}
+function render(){
+  const arr=load(), q=$("q").value.trim().toLowerCase(), sort=$("sort").value;
+  let list=arr.filter(x=>!q || x.word.toLowerCase().includes(q) || (x.meaning||"").toLowerCase().includes(q));
+  if(sort==="noMeaning") list=list.filter(x=>!x.meaning);
+  if(sort==="old") list.sort((a,b)=>a.ts-b.ts);
+  else if(sort==="word") list.sort((a,b)=>a.word.localeCompare(b.word,"ja"));
+  else list.sort((a,b)=>b.ts-a.ts);
+
+  const noMean=arr.filter(x=>!x.meaning).length;
+  $("count").textContent=`全${arr.length}語 ／ 表示${list.length}語` + (noMean?` ／ 意味が空 ${noMean}語`:"");
+
+  if(!list.length){
+    $("list").innerHTML=`<div class="empty-msg">${arr.length?"該当する単語がありません":"まだ単語がありません。上の欄から追加してください。"}</div>`;
+    return;
+  }
+  $("list").innerHTML=list.map(x=>{
+    const mean = x.meaning
+      ? `<div class="m" onclick="this.classList.toggle('show')">${esc(x.meaning)}</div>`
+      : `<div class="m empty">（意味は未記入）</div>`;
+    return `<div class="item ${MODE==="quiz"?"quiz":""}">
+      <div class="w">${esc(x.word)}</div>
+      ${mean}
+      <div class="meta"><span>${x.date}</span>${MODE==="quiz"?"<span>タップで表示</span>":""}</div>
+      <div class="acts">
+        <button onclick="editItem('${esc(x.word)}')">意味を編集</button>
+        <button onclick="relookup('${esc(x.word)}')">再取得</button>
+        <button class="del" onclick="delItem('${esc(x.word)}')">削除</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function editItem(w){
+  const arr=load(), i=arr.findIndex(x=>x.word===w); if(i<0) return;
+  const v=prompt(`「${w}」の意味`, arr[i].meaning||"");
+  if(v===null) return;
+  arr[i].meaning=v.trim(); save(arr); render();
+}
+async function relookup(w){
+  const arr=load(), i=arr.findIndex(x=>x.word===w); if(i<0) return;
+  $("status").className="status"; $("status").textContent=`「${w}」を調べています…`;
+  const m=await fetchMeaning(w);
+  if(m){ arr[i].meaning=m; save(arr); render(); $("status").textContent=`「${w}」の意味を更新しました`; }
+  else { $("status").className="status err"; $("status").textContent=`「${w}」はWikipediaで見つかりませんでした`; $("links").innerHTML=searchLinks(w); }
+}
+function delItem(w){
+  if(!confirm(`「${w}」を削除しますか？`)) return;
+  save(load().filter(x=>x.word!==w)); render();
+}
+function exportJson(){
+  const data=JSON.stringify(load(),null,1);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  a.download=`単語ノート_${today().replace(/\//g,"-")}.json`;
+  a.click();
+}
+function importJson(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const add=JSON.parse(r.result);
+      if(!Array.isArray(add)) throw 0;
+      const arr=load(), have=new Set(arr.map(x=>x.word));
+      let n=0;
+      add.forEach(x=>{ if(x.word && !have.has(x.word)){ arr.push(x); n++; } });
+      save(arr); render();
+      alert(`${n}語を追加しました（重複はスキップ）`);
+    }catch(e){ alert("読み込めませんでした。バックアップしたファイルを選んでください。"); }
+    inp.value="";
+  };
+  r.readAsText(f);
+}
+render();
+</script>
+</body>
+</html>
