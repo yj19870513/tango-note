@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="単語ノート">
-<meta name="theme-color" content="#f7f8fa">
+<meta name="theme-color" content="#2a3ec9">
 <title>単語ノート</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon.png">
 <style>
   :root{--bg:#f7f8fa;--card:#ffffff;--line:#e2e6ee;--text:#1f2430;--muted:#7a8296;
         --accent:#2563eb;--green:#16a34a;--orange:#c2620a;--red:#dc2626;--field:#fbfcfe;}
@@ -51,16 +53,20 @@
   .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;
         box-shadow:0 1px 3px rgba(20,30,60,.05);}
   .item .w{font-size:18px;font-weight:700;}
+  .item .r{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px;}
   .item .m{margin-top:6px;white-space:pre-wrap;font-size:15px;}
   .item .m.empty{color:var(--orange);}
+  .item .ex{margin-top:8px;background:#f6f8fc;border-left:3px solid #b9cdf5;border-radius:0 8px 8px 0;
+            padding:8px 10px;font-size:14px;color:#37405a;white-space:pre-wrap;}
+  .item .ex b{display:block;font-size:11px;color:var(--accent);font-weight:700;margin-bottom:2px;}
   .item .meta{color:var(--muted);font-size:11.5px;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .tag{background:#eef2fb;color:var(--accent);border-radius:10px;padding:1px 9px;font-size:11.5px;}
   .item .acts{display:flex;gap:8px;margin-top:10px;}
   .item .acts button{flex:1;background:var(--field);border:1px solid var(--line);color:var(--muted);
                      border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;}
   .item .acts button.del{color:var(--red);}
-  .item.quiz .m{filter:blur(6px);cursor:pointer;transition:filter .15s;}
-  .item.quiz .m.show{filter:none;}
+  .item.quiz .m,.item.quiz .ex{filter:blur(6px);cursor:pointer;transition:filter .15s;}
+  .item.quiz .m.show,.item.quiz .ex.show{filter:none;}
   .empty-msg{color:var(--muted);text-align:center;padding:40px 0;font-size:14px;}
 
   /* 編集シート（画面下からせり上がる大きな編集画面） */
@@ -71,9 +77,12 @@
                 max-height:92vh;overflow-y:auto;box-shadow:0 -4px 20px rgba(20,30,60,.15);}
   .sheet h2{font-size:19px;margin-bottom:4px;}
   .sheet .lbl{font-size:12.5px;color:var(--muted);margin:12px 0 4px;}
-  .sheet textarea{width:100%;min-height:190px;background:var(--field);color:var(--text);
+  .sheet textarea{width:100%;min-height:150px;background:var(--field);color:var(--text);
                   border:1px solid var(--line);border-radius:12px;padding:14px;font-size:16px;
                   font-family:inherit;line-height:1.7;resize:vertical;}
+  .sheet textarea.small{min-height:84px;}
+  .sheet input[type=text]{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);
+                  border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}
   .sheet select{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);
                 border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}
   .sheet .row{margin-top:14px;}
@@ -91,16 +100,20 @@
 <body>
 <div class="wrap">
   <h1>📒 単語ノート</h1>
-  <div class="sub">調べた単語をためて、あとで見返す。意味はWikipediaから自動取得します。</div>
+  <div class="sub">調べた単語をためて、あとで見返す。読み方・意味・用例をWikipediaから自動取得します。</div>
 
   <div class="addbox">
     <input type="text" id="word" placeholder="単語を入力（例：アジャイル）" autocomplete="off"
            onkeydown="if(event.key==='Enter')addWord()">
+    <input type="text" id="reading" placeholder="読み方（ひらがな。自動で入ります）" autocomplete="off"
+           style="margin-top:8px">
     <textarea id="meaning" placeholder="意味（空のままでOK。自動取得できなければ、あとから書けます）"></textarea>
+    <textarea id="example" placeholder="用例・例文（自動で入ります。自分で作った文のほうが覚えやすいです）"
+              style="min-height:70px"></textarea>
     <select id="cat"></select>
     <div class="row">
       <button class="btn" onclick="addWord()">保存する</button>
-      <button class="btn sub" onclick="lookup()">意味を調べる</button>
+      <button class="btn sub" onclick="lookup()">自動で調べる</button>
     </div>
     <div class="row" id="gRow" style="display:none">
       <button class="btn google" onclick="openGoogle()">🔍 Googleで調べる</button>
@@ -116,6 +129,7 @@
       <option value="old">古い順</option>
       <option value="word">五十音順</option>
       <option value="noMeaning">意味が空のみ</option>
+      <option value="noExample">用例が空のみ</option>
     </select>
   </div>
   <div class="cats" id="cats"></div>
@@ -127,8 +141,12 @@
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()">
   <div class="panel">
     <h2 id="sheetWord"></h2>
+    <div class="lbl">読み方（ひらがな）</div>
+    <input type="text" id="sheetReading" placeholder="例：しょうきゃく" autocomplete="off">
     <div class="lbl">意味（自由に書き換えられます）</div>
     <textarea id="sheetMeaning" placeholder="意味を書いてください"></textarea>
+    <div class="lbl">用例・例文</div>
+    <textarea id="sheetExample" class="small" placeholder="この単語を使った文を書いてください"></textarea>
     <div class="lbl">カテゴリ</div>
     <select id="sheetCat"></select>
     <div class="row" style="display:flex;gap:8px">
@@ -177,6 +195,52 @@ async function fetchMeaning(word){
     return j.extract||null;
   }catch(e){ clearTimeout(to); return null; }
 }
+
+/* ---------- 読み方（ひらがな）を取り出す ----------
+   Wikipediaの説明文は「贖罪（しょくざい）とは…」の形で始まることが多いので、
+   最初のカッコの中からひらがなだけの部分を読み方として拾う。 */
+const KANA_ONLY=/^[ぁ-ゖァ-ヴーゝゞ・\s]+$/;
+function toHira(s){ return (s||"").replace(/[ァ-ヴ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)); }
+function extractReading(word, text){
+  if(!text) return "";
+  if(KANA_ONLY.test(word)) return "";           // 単語自体がかな・カタカナなら読み方は不要
+  const m=text.match(/^[^（(]{0,40}[（(]([^）)]{1,60})[）)]/);
+  if(!m) return "";
+  for(const c0 of m[1].split(/[、,;；]/)){
+    const c=c0.trim().replace(/\s/g,"");
+    if(/^[ぁ-ゖー・]{2,30}$/.test(c)) return c;   // ひらがなのみを採用（英語表記などは除く）
+  }
+  return "";
+}
+
+/* ---------- 用例（その単語を使った文）を取り出す ----------
+   本文の先頭10文までを取得し、単語を含む読みやすい長さの文を1つ選ぶ。 */
+async function fetchArticleText(word){
+  const url="https://ja.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1"+
+            "&prop=extracts&explaintext=1&exsentences=10&titles="+encodeURIComponent(word);
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),7000);
+  try{
+    const r=await fetch(url,{signal:ctl.signal});
+    clearTimeout(to);
+    if(!r.ok) return "";
+    const j=await r.json();
+    const pages=j&&j.query&&j.query.pages;
+    if(!pages) return "";
+    const p=Object.values(pages)[0];
+    return (p&&p.extract)||"";
+  }catch(e){ clearTimeout(to); return ""; }
+}
+function pickExample(word, text){
+  if(!text) return "";
+  const clean=text.replace(/={2,}[^=\n]{0,40}={2,}/g," ")   // 「== 概要 ==」などの見出し記号を除去
+                  .replace(/\s+/g," ");
+  const sents=clean.split("。").map(s=>s.trim()).filter(Boolean).map(s=>s+"。");
+  const cands=sents.filter(s=>s.includes(word) && s.length>=15 && s.length<=90 && !s.includes("="));
+  if(!cands.length) return "";
+  const later=cands.filter(s=>s!==sents[0]);   // 1文目は定義文なので、できれば2文目以降を使う
+  return later[0]||cands[0];
+}
+async function fetchExample(word){ return pickExample(word, await fetchArticleText(word)); }
 function googleUrl(w){ return "https://www.google.com/search?q="+encodeURIComponent(w+" とは"); }
 function openGoogle(){
   const w=$("word").value.trim(); if(!w) return;
@@ -199,10 +263,18 @@ async function lookup(){
   if(!w){ $("status").textContent="先に単語を入力してください"; return; }
   $("status").className="status"; $("status").textContent="調べています…";
   $("gRow").style.display="none";
-  const m=await fetchMeaning(w);
+  const [m,ex]=await Promise.all([fetchMeaning(w), fetchExample(w)]);
   if(m){
     $("meaning").value=m;
-    $("status").textContent="Wikipediaから取得しました。自分の言葉に書き換えると記憶に残りやすいです。";
+    const rd=extractReading(w,m);
+    if(rd && !$("reading").value.trim()) $("reading").value=rd;
+    if(ex && !$("example").value.trim()) $("example").value=ex;
+    const got=["意味"]; if(rd) got.push("読み方"); if(ex) got.push("用例");
+    const miss=[]; if(!rd&&!$("reading").value.trim()&&!KANA_ONLY.test(w)) miss.push("読み方");
+    if(!ex&&!$("example").value.trim()) miss.push("用例");
+    $("status").textContent=`Wikipediaから${got.join("・")}を取得しました。`
+      +(miss.length?`${miss.join("・")}は見つからなかったので、手で入れてください。`:"")
+      +"自分の言葉に書き換えると記憶に残りやすいです。";
   }else{
     $("status").className="status err";
     $("status").textContent="Wikipediaにありませんでした。下のボタンからGoogleで調べられます。";
@@ -214,19 +286,24 @@ async function addWord(){
   const w=$("word").value.trim();
   if(!w){ $("status").textContent="単語を入力してください"; return; }
   let m=$("meaning").value.trim();
+  let reading=$("reading").value.trim();
+  let example=$("example").value.trim();
   const cat=$("cat").value||"未分類";
   const arr=load();
   if(arr.some(x=>x.word===w)){
     if(!confirm(`「${w}」はすでに登録されています。上書きしますか？`)) return;
     arr.splice(arr.findIndex(x=>x.word===w),1);
   }
-  if(!m){
-    $("status").className="status"; $("status").textContent="意味を自動取得しています…";
-    m=await fetchMeaning(w)||"";
+  if(!m||!example){
+    $("status").className="status"; $("status").textContent="意味・読み方・用例を自動取得しています…";
+    const [m2,ex2]=await Promise.all([m?null:fetchMeaning(w), example?null:fetchExample(w)]);
+    if(!m&&m2) m=m2;
+    if(!example&&ex2) example=ex2;
   }
-  arr.push({word:w, meaning:m, cat, date:today(), ts:Date.now()});
+  if(!reading) reading=extractReading(w,m);
+  arr.push({word:w, reading, meaning:m, example, cat, date:today(), ts:Date.now()});
   save(arr);
-  $("word").value=""; $("meaning").value="";
+  $("word").value=""; $("meaning").value=""; $("reading").value=""; $("example").value="";
   $("status").className="status";
   if(m){ $("status").textContent=`「${w}」を保存しました（意味も取得済み）`; $("gRow").style.display="none"; }
   else{ $("status").className="status err";
@@ -240,7 +317,9 @@ function openSheet(word){
   const arr=load(), it=arr.find(x=>x.word===word); if(!it) return;
   EDITING=word;
   $("sheetWord").textContent=it.word;
+  $("sheetReading").value=it.reading||"";
   $("sheetMeaning").value=it.meaning||"";
+  $("sheetExample").value=it.example||"";
   $("sheetCat").innerHTML=catOptions(it.cat||"未分類");
   $("sheet").classList.add("on");
   setTimeout(()=>$("sheetMeaning").focus(),100);
@@ -249,6 +328,8 @@ function closeSheet(){ $("sheet").classList.remove("on"); EDITING=null; }
 function saveSheet(){
   const arr=load(), i=arr.findIndex(x=>x.word===EDITING); if(i<0) return;
   arr[i].meaning=$("sheetMeaning").value.trim();
+  arr[i].reading=$("sheetReading").value.trim();
+  arr[i].example=$("sheetExample").value.trim();
   arr[i].cat=$("sheetCat").value;
   save(arr); closeSheet(); render();
 }
@@ -275,15 +356,18 @@ function render(){
   $("cats").innerHTML=[`<button class="${CATFILTER===""?"on":""}" onclick="setCat('')">すべて ${arr.length}</button>`]
     .concat(used.map(c=>`<button class="${CATFILTER===c?"on":""}" onclick="setCat('${c}')">${c} ${counts[c]}</button>`)).join("");
 
-  let list=arr.filter(x=>!q || x.word.toLowerCase().includes(q) || (x.meaning||"").toLowerCase().includes(q));
+  let list=arr.filter(x=>!q || x.word.toLowerCase().includes(q) || (x.meaning||"").toLowerCase().includes(q)
+                        || (x.reading||"").includes(q) || (x.example||"").toLowerCase().includes(q));
   if(CATFILTER) list=list.filter(x=>(x.cat||"未分類")===CATFILTER);
   if(sort==="noMeaning") list=list.filter(x=>!x.meaning);
+  if(sort==="noExample") list=list.filter(x=>!x.example);
   if(sort==="old") list.sort((a,b)=>a.ts-b.ts);
   else if(sort==="word") list.sort((a,b)=>a.word.localeCompare(b.word,"ja"));
   else list.sort((a,b)=>b.ts-a.ts);
 
-  const noMean=arr.filter(x=>!x.meaning).length;
-  $("count").textContent=`全${arr.length}語 ／ 表示${list.length}語`+(noMean?` ／ 意味が空 ${noMean}語`:"");
+  const noMean=arr.filter(x=>!x.meaning).length, noEx=arr.filter(x=>!x.example).length;
+  $("count").textContent=`全${arr.length}語 ／ 表示${list.length}語`
+    +(noMean?` ／ 意味が空 ${noMean}語`:"")+(noEx?` ／ 用例が空 ${noEx}語`:"");
 
   if(!list.length){
     $("list").innerHTML=`<div class="empty-msg">${arr.length?"該当する単語がありません":"まだ単語がありません。上の欄から追加してください。"}</div>`;
@@ -293,13 +377,17 @@ function render(){
     const mean = x.meaning
       ? `<div class="m" onclick="this.classList.toggle('show')">${esc(x.meaning)}</div>`
       : `<div class="m empty">（意味は未記入）</div>`;
+    const read = x.reading ? `<span class="r">${esc(x.reading)}</span>` : "";
+    const exam = x.example
+      ? `<div class="ex" onclick="this.classList.toggle('show')"><b>用例</b>${esc(x.example)}</div>` : "";
     const w=esc(x.word);
     return `<div class="item ${MODE==="quiz"?"quiz":""}">
-      <div class="w">${w}</div>
+      <div class="w">${w}${read}</div>
       ${mean}
+      ${exam}
       <div class="meta"><span class="tag">${esc(x.cat||"未分類")}</span><span>${x.date}</span>${MODE==="quiz"?"<span>タップで表示</span>":""}</div>
       <div class="acts">
-        <button onclick="openSheet('${w}')">${x.meaning?"意味を編集":"意味を書く"}</button>
+        <button onclick="openSheet('${w}')">${x.meaning?"編集":"意味を書く"}</button>
         <button onclick="relookup('${w}')">再取得</button>
         <button class="del" onclick="delItem('${w}')">削除</button>
       </div>
@@ -309,8 +397,16 @@ function render(){
 async function relookup(w){
   const arr=load(), i=arr.findIndex(x=>x.word===w); if(i<0) return;
   $("status").className="status"; $("status").textContent=`「${w}」を調べています…`;
-  const m=await fetchMeaning(w);
-  if(m){ arr[i].meaning=m; save(arr); render(); $("status").textContent=`「${w}」の意味を更新しました`; }
+  const [m,ex]=await Promise.all([fetchMeaning(w), fetchExample(w)]);
+  if(m){
+    arr[i].meaning=m;
+    const rd=extractReading(w,m);
+    if(rd) arr[i].reading=rd;
+    if(ex) arr[i].example=ex;
+    save(arr); render();
+    const got=["意味"]; if(rd) got.push("読み方"); if(ex) got.push("用例");
+    $("status").textContent=`「${w}」の${got.join("・")}を更新しました`;
+  }
   else { $("status").className="status err"; $("status").textContent=`「${w}」はWikipediaにありません。カードの「意味を書く」から登録できます`; }
 }
 function delItem(w){
