@@ -21,27 +21,30 @@
   /* 入力エリア */
   .addbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;
           box-shadow:0 1px 3px rgba(20,30,60,.06);}
-  .addbox input[type=text],.addbox textarea{
+  .addbox input[type=text],.addbox textarea,.addbox select{
     width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);
     border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}
-  .addbox textarea{margin-top:8px;resize:vertical;min-height:80px;line-height:1.6;}
+  .addbox textarea{margin-top:8px;resize:vertical;min-height:96px;line-height:1.6;}
+  .addbox select{margin-top:8px;}
   .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
   .btn{flex:1;min-width:120px;background:var(--accent);color:#fff;border:none;border-radius:10px;
        padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
   .btn.sub{background:#eef2fb;color:var(--accent);border:1px solid #cfdcf7;}
+  .btn.google{background:#fff5e8;color:#b45309;border:1px solid #f5d9ac;}
   .btn:disabled{opacity:.5;}
   .status{font-size:13px;color:var(--muted);margin-top:8px;min-height:20px;}
   .status.err{color:var(--orange);}
-  .links{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
-  .links a{flex:1;min-width:100px;text-align:center;background:var(--field);border:1px solid var(--line);
-           border-radius:8px;padding:9px;color:var(--accent);text-decoration:none;font-size:13.5px;}
 
   /* 検索・件数 */
-  .tools{display:flex;gap:8px;margin-bottom:10px;}
-  .tools input{flex:1;background:var(--card);color:var(--text);border:1px solid var(--line);
+  .tools{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .tools input{flex:1;min-width:150px;background:var(--card);color:var(--text);border:1px solid var(--line);
                border-radius:10px;padding:10px 12px;font-size:15px;}
   .tools select{background:var(--card);color:var(--text);border:1px solid var(--line);
                 border-radius:10px;padding:10px;font-size:14px;}
+  .cats{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:4px;}
+  .cats button{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--muted);
+               border-radius:16px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .cats button.on{background:#e7edfb;color:var(--accent);border-color:#b9cdf5;font-weight:700;}
   .count{color:var(--muted);font-size:12.5px;margin-bottom:10px;}
 
   /* カード */
@@ -50,7 +53,8 @@
   .item .w{font-size:18px;font-weight:700;}
   .item .m{margin-top:6px;white-space:pre-wrap;font-size:15px;}
   .item .m.empty{color:var(--orange);}
-  .item .meta{color:var(--muted);font-size:11.5px;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;}
+  .item .meta{color:var(--muted);font-size:11.5px;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .tag{background:#eef2fb;color:var(--accent);border-radius:10px;padding:1px 9px;font-size:11.5px;}
   .item .acts{display:flex;gap:8px;margin-top:10px;}
   .item .acts button{flex:1;background:var(--field);border:1px solid var(--line);color:var(--muted);
                      border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;}
@@ -59,10 +63,26 @@
   .item.quiz .m.show{filter:none;}
   .empty-msg{color:var(--muted);text-align:center;padding:40px 0;font-size:14px;}
 
+  /* 編集シート（画面下からせり上がる大きな編集画面） */
+  .sheet{position:fixed;inset:0;background:rgba(20,25,40,.45);z-index:100;display:none;}
+  .sheet.on{display:block;}
+  .sheet .panel{position:absolute;left:0;right:0;bottom:0;background:var(--card);
+                border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+                max-height:92vh;overflow-y:auto;box-shadow:0 -4px 20px rgba(20,30,60,.15);}
+  .sheet h2{font-size:19px;margin-bottom:4px;}
+  .sheet .lbl{font-size:12.5px;color:var(--muted);margin:12px 0 4px;}
+  .sheet textarea{width:100%;min-height:190px;background:var(--field);color:var(--text);
+                  border:1px solid var(--line);border-radius:12px;padding:14px;font-size:16px;
+                  font-family:inherit;line-height:1.7;resize:vertical;}
+  .sheet select{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);
+                border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}
+  .sheet .row{margin-top:14px;}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.6;}
+
   /* 下部バー */
   .footer{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);
           border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-          display:flex;gap:8px;max-width:680px;margin:0 auto;}
+          display:flex;gap:8px;max-width:680px;margin:0 auto;z-index:50;}
   .footer button{flex:1;background:var(--field);border:1px solid var(--line);color:var(--muted);
                  border-radius:10px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;}
   .footer button.on{background:#e7edfb;color:var(--accent);border-color:#b9cdf5;font-weight:700;}
@@ -76,13 +96,17 @@
   <div class="addbox">
     <input type="text" id="word" placeholder="単語を入力（例：アジャイル）" autocomplete="off"
            onkeydown="if(event.key==='Enter')addWord()">
-    <textarea id="meaning" placeholder="意味（空のままでOK。自動取得できなければ、あとから自分の言葉で書けます）"></textarea>
+    <textarea id="meaning" placeholder="意味（空のままでOK。自動取得できなければ、あとから書けます）"></textarea>
+    <select id="cat"></select>
     <div class="row">
       <button class="btn" onclick="addWord()">保存する</button>
       <button class="btn sub" onclick="lookup()">意味を調べる</button>
     </div>
+    <div class="row" id="gRow" style="display:none">
+      <button class="btn google" onclick="openGoogle()">🔍 Googleで調べる</button>
+      <button class="btn sub" onclick="pasteClip()">📋 コピーした文を貼り付け</button>
+    </div>
     <div class="status" id="status"></div>
-    <div class="links" id="links"></div>
   </div>
 
   <div class="tools">
@@ -94,8 +118,29 @@
       <option value="noMeaning">意味が空のみ</option>
     </select>
   </div>
+  <div class="cats" id="cats"></div>
   <div class="count" id="count"></div>
   <div id="list"></div>
+</div>
+
+<!-- 編集シート -->
+<div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()">
+  <div class="panel">
+    <h2 id="sheetWord"></h2>
+    <div class="lbl">意味（自由に書き換えられます）</div>
+    <textarea id="sheetMeaning" placeholder="意味を書いてください"></textarea>
+    <div class="lbl">カテゴリ</div>
+    <select id="sheetCat"></select>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="btn" onclick="saveSheet()">保存</button>
+      <button class="btn sub" onclick="closeSheet()">閉じる</button>
+    </div>
+    <div class="row" style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn google" onclick="sheetGoogle()">🔍 Googleで調べる</button>
+      <button class="btn sub" onclick="sheetPaste()">📋 コピーした文を貼り付け</button>
+    </div>
+    <div class="hint">Googleで調べたあと、そのページで説明文を長押しして「コピー」→ここに戻って「貼り付け」を押すと、そのまま入ります。</div>
+  </div>
 </div>
 
 <div class="footer">
@@ -109,13 +154,15 @@
 <script>
 "use strict";
 const KEY="tango_note_v1";
-let MODE="list";
+const CATS=["未分類","ビジネス","IT・テック","金融・投資","語彙・日本語","その他"];
+let MODE="list", CATFILTER="", EDITING=null;
 const $=id=>document.getElementById(id);
 
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"[]"); }catch(e){ return []; } }
 function save(a){ localStorage.setItem(KEY, JSON.stringify(a)); }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function today(){ const d=new Date(); return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate(); }
+function catOptions(sel){ return CATS.map(c=>`<option value="${c}"${c===sel?" selected":""}>${c}</option>`).join(""); }
 
 /* ---------- Wikipediaから意味を取得（APIキー不要） ---------- */
 async function fetchMeaning(word){
@@ -126,29 +173,40 @@ async function fetchMeaning(word){
     clearTimeout(to);
     if(!r.ok) return null;
     const j=await r.json();
-    if(j.type&&j.type.includes("disambiguation")) return null; // 曖昧さ回避ページは除外
+    if(j.type&&j.type.includes("disambiguation")) return null;
     return j.extract||null;
   }catch(e){ clearTimeout(to); return null; }
 }
-function searchLinks(word){
-  const w=encodeURIComponent(word);
-  return `<a href="https://www.google.com/search?q=${w}+とは" target="_blank" rel="noopener">Googleで調べる</a>
-          <a href="https://ja.wikipedia.org/w/index.php?search=${w}" target="_blank" rel="noopener">Wikipediaで探す</a>`;
+function googleUrl(w){ return "https://www.google.com/search?q="+encodeURIComponent(w+" とは"); }
+function openGoogle(){
+  const w=$("word").value.trim(); if(!w) return;
+  window.open(googleUrl(w),"_blank","noopener");
+  $("status").className="status";
+  $("status").textContent="開いたページで説明文を長押し→コピーして、戻ってから「貼り付け」を押してください。";
+}
+async function readClip(){
+  try{ return (await navigator.clipboard.readText()||"").trim(); }
+  catch(e){ return null; }
+}
+async function pasteClip(){
+  const t=await readClip();
+  if(t){ $("meaning").value=t; $("status").className="status"; $("status").textContent="貼り付けました。不要な部分は消して整えてください。"; }
+  else{ $("status").className="status err"; $("status").textContent="貼り付けできませんでした。意味の欄を長押しして直接ペーストしてください。"; }
 }
 
 async function lookup(){
   const w=$("word").value.trim();
   if(!w){ $("status").textContent="先に単語を入力してください"; return; }
   $("status").className="status"; $("status").textContent="調べています…";
-  $("links").innerHTML="";
+  $("gRow").style.display="none";
   const m=await fetchMeaning(w);
   if(m){
     $("meaning").value=m;
     $("status").textContent="Wikipediaから取得しました。自分の言葉に書き換えると記憶に残りやすいです。";
   }else{
     $("status").className="status err";
-    $("status").textContent="自動では見つかりませんでした。下のリンクで調べて、意味を書いてください。";
-    $("links").innerHTML=searchLinks(w);
+    $("status").textContent="Wikipediaにありませんでした。下のボタンからGoogleで調べられます。";
+    $("gRow").style.display="flex";   // その場にボタンを出す（下へ飛ばさない）
   }
 }
 
@@ -156,22 +214,49 @@ async function addWord(){
   const w=$("word").value.trim();
   if(!w){ $("status").textContent="単語を入力してください"; return; }
   let m=$("meaning").value.trim();
+  const cat=$("cat").value||"未分類";
   const arr=load();
   if(arr.some(x=>x.word===w)){
     if(!confirm(`「${w}」はすでに登録されています。上書きしますか？`)) return;
     arr.splice(arr.findIndex(x=>x.word===w),1);
   }
-  if(!m){ // 意味が空なら自動取得を試みる
+  if(!m){
     $("status").className="status"; $("status").textContent="意味を自動取得しています…";
     m=await fetchMeaning(w)||"";
   }
-  arr.push({word:w, meaning:m, date:today(), ts:Date.now()});
+  arr.push({word:w, meaning:m, cat, date:today(), ts:Date.now()});
   save(arr);
   $("word").value=""; $("meaning").value="";
   $("status").className="status";
-  $("status").textContent = m ? `「${w}」を保存しました（意味も取得済み）` : `「${w}」を保存しました。意味はあとで書き足せます`;
-  $("links").innerHTML = m ? "" : searchLinks(w);
+  if(m){ $("status").textContent=`「${w}」を保存しました（意味も取得済み）`; $("gRow").style.display="none"; }
+  else{ $("status").className="status err";
+        $("status").textContent=`「${w}」を保存しました。意味は空です。カードの「意味を書く」から追加できます`;
+        $("gRow").style.display="none"; }
   render();
+}
+
+/* ---------- 編集シート ---------- */
+function openSheet(word){
+  const arr=load(), it=arr.find(x=>x.word===word); if(!it) return;
+  EDITING=word;
+  $("sheetWord").textContent=it.word;
+  $("sheetMeaning").value=it.meaning||"";
+  $("sheetCat").innerHTML=catOptions(it.cat||"未分類");
+  $("sheet").classList.add("on");
+  setTimeout(()=>$("sheetMeaning").focus(),100);
+}
+function closeSheet(){ $("sheet").classList.remove("on"); EDITING=null; }
+function saveSheet(){
+  const arr=load(), i=arr.findIndex(x=>x.word===EDITING); if(i<0) return;
+  arr[i].meaning=$("sheetMeaning").value.trim();
+  arr[i].cat=$("sheetCat").value;
+  save(arr); closeSheet(); render();
+}
+function sheetGoogle(){ if(EDITING) window.open(googleUrl(EDITING),"_blank","noopener"); }
+async function sheetPaste(){
+  const t=await readClip();
+  if(t){ $("sheetMeaning").value=t; }
+  else{ alert("貼り付けできませんでした。入力欄を長押しして直接ペーストしてください。"); }
 }
 
 function setMode(m){
@@ -180,16 +265,25 @@ function setMode(m){
   $("btnQuiz").className = m==="quiz"?"on":"";
   render();
 }
+function setCat(c){ CATFILTER=c; render(); }
+
 function render(){
   const arr=load(), q=$("q").value.trim().toLowerCase(), sort=$("sort").value;
+  // カテゴリタブ
+  const counts={}; arr.forEach(x=>{ const c=x.cat||"未分類"; counts[c]=(counts[c]||0)+1; });
+  const used=CATS.filter(c=>counts[c]);
+  $("cats").innerHTML=[`<button class="${CATFILTER===""?"on":""}" onclick="setCat('')">すべて ${arr.length}</button>`]
+    .concat(used.map(c=>`<button class="${CATFILTER===c?"on":""}" onclick="setCat('${c}')">${c} ${counts[c]}</button>`)).join("");
+
   let list=arr.filter(x=>!q || x.word.toLowerCase().includes(q) || (x.meaning||"").toLowerCase().includes(q));
+  if(CATFILTER) list=list.filter(x=>(x.cat||"未分類")===CATFILTER);
   if(sort==="noMeaning") list=list.filter(x=>!x.meaning);
   if(sort==="old") list.sort((a,b)=>a.ts-b.ts);
   else if(sort==="word") list.sort((a,b)=>a.word.localeCompare(b.word,"ja"));
   else list.sort((a,b)=>b.ts-a.ts);
 
   const noMean=arr.filter(x=>!x.meaning).length;
-  $("count").textContent=`全${arr.length}語 ／ 表示${list.length}語` + (noMean?` ／ 意味が空 ${noMean}語`:"");
+  $("count").textContent=`全${arr.length}語 ／ 表示${list.length}語`+(noMean?` ／ 意味が空 ${noMean}語`:"");
 
   if(!list.length){
     $("list").innerHTML=`<div class="empty-msg">${arr.length?"該当する単語がありません":"まだ単語がありません。上の欄から追加してください。"}</div>`;
@@ -199,30 +293,25 @@ function render(){
     const mean = x.meaning
       ? `<div class="m" onclick="this.classList.toggle('show')">${esc(x.meaning)}</div>`
       : `<div class="m empty">（意味は未記入）</div>`;
+    const w=esc(x.word);
     return `<div class="item ${MODE==="quiz"?"quiz":""}">
-      <div class="w">${esc(x.word)}</div>
+      <div class="w">${w}</div>
       ${mean}
-      <div class="meta"><span>${x.date}</span>${MODE==="quiz"?"<span>タップで表示</span>":""}</div>
+      <div class="meta"><span class="tag">${esc(x.cat||"未分類")}</span><span>${x.date}</span>${MODE==="quiz"?"<span>タップで表示</span>":""}</div>
       <div class="acts">
-        <button onclick="editItem('${esc(x.word)}')">意味を編集</button>
-        <button onclick="relookup('${esc(x.word)}')">再取得</button>
-        <button class="del" onclick="delItem('${esc(x.word)}')">削除</button>
+        <button onclick="openSheet('${w}')">${x.meaning?"意味を編集":"意味を書く"}</button>
+        <button onclick="relookup('${w}')">再取得</button>
+        <button class="del" onclick="delItem('${w}')">削除</button>
       </div>
     </div>`;
   }).join("");
-}
-function editItem(w){
-  const arr=load(), i=arr.findIndex(x=>x.word===w); if(i<0) return;
-  const v=prompt(`「${w}」の意味`, arr[i].meaning||"");
-  if(v===null) return;
-  arr[i].meaning=v.trim(); save(arr); render();
 }
 async function relookup(w){
   const arr=load(), i=arr.findIndex(x=>x.word===w); if(i<0) return;
   $("status").className="status"; $("status").textContent=`「${w}」を調べています…`;
   const m=await fetchMeaning(w);
   if(m){ arr[i].meaning=m; save(arr); render(); $("status").textContent=`「${w}」の意味を更新しました`; }
-  else { $("status").className="status err"; $("status").textContent=`「${w}」はWikipediaで見つかりませんでした`; $("links").innerHTML=searchLinks(w); }
+  else { $("status").className="status err"; $("status").textContent=`「${w}」はWikipediaにありません。カードの「意味を書く」から登録できます`; }
 }
 function delItem(w){
   if(!confirm(`「${w}」を削除しますか？`)) return;
@@ -244,7 +333,7 @@ function importJson(inp){
       if(!Array.isArray(add)) throw 0;
       const arr=load(), have=new Set(arr.map(x=>x.word));
       let n=0;
-      add.forEach(x=>{ if(x.word && !have.has(x.word)){ arr.push(x); n++; } });
+      add.forEach(x=>{ if(x.word && !have.has(x.word)){ if(!x.cat) x.cat="未分類"; arr.push(x); n++; } });
       save(arr); render();
       alert(`${n}語を追加しました（重複はスキップ）`);
     }catch(e){ alert("読み込めませんでした。バックアップしたファイルを選んでください。"); }
@@ -252,6 +341,7 @@ function importJson(inp){
   };
   r.readAsText(f);
 }
+$("cat").innerHTML=catOptions("未分類");
 render();
 </script>
 </body>
